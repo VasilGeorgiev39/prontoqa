@@ -1,3 +1,6 @@
+# %%
+import sys
+import os
 from theory import *
 from syntax import *
 from proof import *
@@ -9,10 +12,10 @@ import argparse
 import getpass
 import re
 import json
-import sys
+from tqdm import tqdm
 
 AVAILABLE_DEDUCTION_RULES = ["ModusPonens", "AndIntro", "AndElim", "OrIntro", "OrElim", "ProofByContra", "Composed"]
-
+# %%
 class Morphology(object):
 	def __init__(self):
 		self.plural_nouns = {}
@@ -20,10 +23,10 @@ class Morphology(object):
 		self.proper_nouns = []
 
 	def add_noun(self, noun, plural):
-		if noun in self.plural_nouns:
-			raise Exception("The noun '{}' was already added.".format(noun))
-		if plural in self.reverse_plural_nouns:
-			raise Exception("The plural noun '{}' was already added.".format(plural))
+		# if noun in self.plural_nouns:
+		# 	raise Exception("The noun '{}' was already added.".format(noun))
+		# if plural in self.reverse_plural_nouns:
+		# 	raise Exception("The plural noun '{}' was already added.".format(plural))
 		self.plural_nouns[noun] = plural
 		self.reverse_plural_nouns[plural] = noun
 
@@ -345,10 +348,42 @@ def generate_question(num_deduction_steps, available_concept_names, formula_orde
 			else:
 				available_concept_names = ["number", "real number", "integer", "natural number", "prime number", "Mersenne prime", "even number", "composite number", "negative number", "fraction"]
 		elif available_concept_names == None:
-			available_concept_names = ["wumpus", "yumpus", "zumpus", "dumpus", "rompus", "numpus", "tumpus", "vumpus", "impus", "jompus", "gorpus", "shumpus", "lempus", "sterpus", "grimpus", "lorpus", "brimpus"]
+			available_concept_names = [
+										# Original names
+										"wumpus", "yumpus", "zumpus", "dumpus", "rompus", "numpus", "tumpus", "vumpus", 
+										"impus", "jompus", "gorpus", "shumpus", "lempus", "sterpus", "grimpus", "lorpus", 
+										"brimpus",
+										# Extended names
+										"klumpus", "drempus", "flimpus", "thrumpus", "snerpus", "primpus", "glumpus",
+										"crompus", "plerpus", "spimpus", "frumpus", "whimpus", "blerpus", "slumpus",
+										"trimpus", "skerpus", "flumpus", "drimpus", "krempus", "clumpus", "swimpus",
+										"grumpus", "plimpus", "shrempus", "twerpus", "brumpus", "knimpus", "slerpus",
+										"wrumpus", "thimpus", "splempus", "dwerpus", "climpus", "skrumpus", "flerpus",
+										"prumpus", "gwimpus", "drerpus", "splumpus", "thrimpus", "kwerpus", "blimpus",
+										"swerpus", "grempus", "clerpus", "strumpus", "knerpus", "plumpus", "wherpus",
+										"twimpus", "sprumpus"
+									]
+			for name in available_concept_names:
+				morphology.add_noun(name, name + "es")
 		else:
 			available_concept_names = available_concept_names.copy()
-		irrelevant_concept_names = ["timpus", "yimpus", "rempus", "fompus", "worpus", "terpus", "gerpus", "kerpus", "scrompus", "zhorpus", "bompus", "jelpus", "felpus", "chorpus", "hilpus", "storpus", "yerpus", "boompus", "gwompus", "rorpus", "quimpus"]
+		irrelevant_concept_names = [
+										# Original names
+										"timpus", "yimpus", "rempus", "fompus", "worpus", "terpus", "gerpus", "kerpus",
+										"scrompus", "zhorpus", "bompus", "jelpus", "felpus", "chorpus", "hilpus",
+										"storpus", "yerpus", "boompus", "gwompus", "rorpus", "quimpus",
+										# Extended names (with duplicates removed)
+										"zhimpus", "krolpus", "velpus", "throlpus", "snimpus", "prelpus", "glerpus",
+										"mimpus", "dwolpus", "spelpus", "frolpus", "whelpus", "bralpus", "smimpus",
+										"trelpus", "skrolpus", "flelpus", "drolpus", "krimpus", "chelpus", "swolpus",
+										"grolpus", "phlimpus", "shralpus", "trilpus", "brolpus", "knolpus", "slimpus",
+										"wrolpus", "thelpus", "splolpus", "dwilpus", "crolpus", "skrelpus", "flolpus",
+										"zhrolpus", "gwelpus", "drilpus", "splalpus", "crelpus", "kwilpus", "scrilpus",
+										"swelpus", "gralpus", "clolpus", "strilpus", "threlpus", "phrolpus", "whilpus",
+										"twelpus", "sprolpus"
+									]
+		for name in irrelevant_concept_names:
+			morphology.add_noun(name, name + "es")
 		index = randrange(len(available_concept_names))
 		distractor_concept = available_concept_names[index]
 		del available_concept_names[index]
@@ -365,7 +400,27 @@ def generate_question(num_deduction_steps, available_concept_names, formula_orde
 							["kind", "mean", "angry", "amenable", "aggressive"],
 							["melodic", "muffled", "discordant", "loud"],
 							["slow", "moderate", "fast"],
-							["windy", "sunny", "overcast", "rainy", "snowy"]]
+							["windy", "sunny", "overcast", "rainy", "snowy"],
+							["smooth", "rough", "bumpy", "textured"],
+							["ancient", "modern", "timeless", "contemporary"],
+							["graceful", "clumsy", "agile", "awkward"],
+							["fragrant", "odorless", "pungent", "musty"],
+							["wild", "tame", "feral", "domesticated"],
+							["dense", "sparse", "compact", "scattered"],
+							["elastic", "rigid", "flexible", "stiff"],
+							["fresh", "stale", "aged", "preserved"],
+							["sturdy", "fragile", "robust", "delicate"],
+							["clean", "dirty", "pristine", "soiled"],
+							["sharp", "dull", "pointed", "blunt"],
+							["wet", "dry", "moist", "arid"],
+							["simple", "complex", "basic", "intricate"],
+							["calm", "chaotic", "peaceful", "turbulent"],
+							["light", "heavy", "weightless", "massive"],
+							["straight", "curved", "twisted", "bent"],
+							["mild", "intense", "subtle", "powerful"],
+							["solid", "hollow", "filled", "empty"],
+							["natural", "artificial", "organic", "synthetic"],
+							["pure", "mixed", "blended", "filtered"]]
 
 		selected_entity = choice(available_entity_names)
 		if distractors == "irrelevant":
@@ -1526,6 +1581,7 @@ def run_experiment(model_name, args, num_proof_steps, test_num_proof_steps, log_
 		else:
 			raise Exception("OOD experiments for deduction rule {} is unimplemented.".format(args.deduction_rule))
 	examples = {}
+	pbar = tqdm(total=args.num_trials * args.repetitions_per_test, desc="Running trials")
 	while trial < args.num_trials * args.repetitions_per_test:
 		for t in range(args.repetitions_per_test):
 			if args.deduction_rule == "Composed" and args.OOD:
@@ -1634,6 +1690,7 @@ def run_experiment(model_name, args, num_proof_steps, test_num_proof_steps, log_
 						'chain_of_thought' : chain_of_thought,
 						'answer' : answer}
 				examples['example{}'.format(trial)] = example
+				pbar.update(1)
 				continue
 			elif model_name == 'gpt3':
 				predict_func = lambda x, **kwargs : gpt3.predict(gpt_api_key, args.model_size, x, stop='Q:', **kwargs)
@@ -1684,43 +1741,81 @@ def run_experiment(model_name, args, num_proof_steps, test_num_proof_steps, log_
 			stddev = np.sqrt(mu*(1 - mu)/(trial - too_long_responses))
 			print_output('  (normal approximation) mean: ' + str(mu) + ', 95% lower bound: ' + str(mu - 1.96*stddev) + ', 95% upper bound: ' + str(mu + 1.96*stddev) + '\n', log)
 			log.flush()
+			pbar.update(1)
 	if model_name == 'json':
 		json.dump(examples, log, indent=1)
 	log.close()
 	return label_results
+# %%
+
+class DebugArgs:
+	def __init__(self):
+		self.resume = False
+		self.model_name = "json"
+		self.model_size = ""
+		self.ordering = "random"
+		self.test_ordering = "random"
+		self.num_trials = 1000
+		self.few_shot_examples = 0
+		self.ontology = "fictional"
+		self.opt_server = None
+		self.distractors = "relevant"
+		self.test_distractors = "relevant"
+		self.no_adjectives = False
+		self.proofs_only = False
+		self.DFS = "none"
+		self.disjoint_concept_names = False
+		self.OOD = False
+		self.api_key = None
+		self.min_hops = 20
+		self.max_hops = 20
+		self.test_hops_diff = 0
+		self.hops_skip = 1
+		self.proof_width = 2
+		self.test_width_diff = 0
+		self.repetitions_per_test = 1
+		self.rule_types = 3
+		self.prompting = "COT"
+		self.deduction_rule = "ModusPonens"
+		self.generate_non_atomic_steps = False
+		self.seed = 62471893
+
 
 if __name__ == "__main__":
-	parser = argparse.ArgumentParser()
-	parser.add_argument("--resume", action='store_true')
-	parser.add_argument("--model-name", type=str, required=True)
-	parser.add_argument("--model-size", type=str, required=True)
-	parser.add_argument("--ordering", type=str, default="postorder", choices=["postorder", "preorder", "random"])
-	parser.add_argument("--test-ordering", type=str, default=None, choices=["postorder", "preorder", "random"])
-	parser.add_argument("--num-trials", type=int, default=500)
-	parser.add_argument("--few-shot-examples", type=int, default=8)
-	parser.add_argument("--ontology", type=str, default="fictional", choices=["fictional", "true", "false"])
-	parser.add_argument("--opt-server", type=str, default=None)
-	parser.add_argument("--distractors", type=str, default="relevant", choices=["none", "relevant", "irrelevant"])
-	parser.add_argument("--test-distractors", type=str, default="relevant", choices=["none", "relevant", "irrelevant"])
-	parser.add_argument("--no-adjectives", action='store_true')
-	parser.add_argument("--proofs-only", action='store_true')
-	parser.add_argument("--DFS", type=str, default="none", choices=["none", "backtrack", "nobacktrack"])
-	parser.add_argument("--disjoint-concept-names", action='store_true')
-	parser.add_argument("--OOD", action='store_true')
-	parser.add_argument("--api-key", type=str, default=None)
-	parser.add_argument("--min-hops", type=int, default=1)
-	parser.add_argument("--max-hops", type=int, default=8)
-	parser.add_argument("--test-hops-diff", type=int, default=0)
-	parser.add_argument("--hops-skip", type=int, default=1)
-	parser.add_argument("--proof-width", type=int, default=2)
-	parser.add_argument("--test-width-diff", type=int, default=0)
-	parser.add_argument("--repetitions-per-test", type=int, default=1)
-	parser.add_argument("--rule-types", type=int, default=3)
-	parser.add_argument("--prompting", type=str, default="COT", choices=["COT", "selfconsistency", "selectioninference", "querylogprobs"])
-	parser.add_argument("--deduction-rule", type=str, default="ModusPonens", choices=AVAILABLE_DEDUCTION_RULES)
-	parser.add_argument("--generate-non-atomic-steps", action='store_true')
-	parser.add_argument("--seed", type=int, default=62471893)
-	args = parser.parse_args()
+
+	# parser = argparse.ArgumentParser()
+	# parser.add_argument("--resume", action='store_true')
+	# parser.add_argument("--model-name", type=str, required=True)
+	# parser.add_argument("--model-size", type=str, required=True)
+	# parser.add_argument("--ordering", type=str, default="postorder", choices=["postorder", "preorder", "random"])
+	# parser.add_argument("--test-ordering", type=str, default=None, choices=["postorder", "preorder", "random"])
+	# parser.add_argument("--num-trials", type=int, default=500)
+	# parser.add_argument("--few-shot-examples", type=int, default=8)
+	# parser.add_argument("--ontology", type=str, default="fictional", choices=["fictional", "true", "false"])
+	# parser.add_argument("--opt-server", type=str, default=None)
+	# parser.add_argument("--distractors", type=str, default="relevant", choices=["none", "relevant", "irrelevant"])
+	# parser.add_argument("--test-distractors", type=str, default="relevant", choices=["none", "relevant", "irrelevant"])
+	# parser.add_argument("--no-adjectives", action='store_true')
+	# parser.add_argument("--proofs-only", action='store_true')
+	# parser.add_argument("--DFS", type=str, default="none", choices=["none", "backtrack", "nobacktrack"])
+	# parser.add_argument("--disjoint-concept-names", action='store_true')
+	# parser.add_argument("--OOD", action='store_true')
+	# parser.add_argument("--api-key", type=str, default=None)
+	# parser.add_argument("--min-hops", type=int, default=1)
+	# parser.add_argument("--max-hops", type=int, default=8)
+	# parser.add_argument("--test-hops-diff", type=int, default=0)
+	# parser.add_argument("--hops-skip", type=int, default=1)
+	# parser.add_argument("--proof-width", type=int, default=2)
+	# parser.add_argument("--test-width-diff", type=int, default=0)
+	# parser.add_argument("--repetitions-per-test", type=int, default=1)
+	# parser.add_argument("--rule-types", type=int, default=3)
+	# parser.add_argument("--prompting", type=str, default="COT", choices=["COT", "selfconsistency", "selectioninference", "querylogprobs"])
+	# parser.add_argument("--deduction-rule", type=str, default="ModusPonens", choices=AVAILABLE_DEDUCTION_RULES)
+	# parser.add_argument("--generate-non-atomic-steps", action='store_true')
+	# parser.add_argument("--seed", type=int, default=62471893)
+	# args = parser.parse_args()
+
+	args = DebugArgs()
 
 	opt_server = args.opt_server
 	gpt_api_key = args.api_key
@@ -1811,3 +1906,5 @@ if __name__ == "__main__":
 		else:
 			print('ERROR: --model-name must be either ' + str({'gpt3', 'opt', 'unifiedqa', 'json', 'dummy'}))
 			break
+
+# %%
