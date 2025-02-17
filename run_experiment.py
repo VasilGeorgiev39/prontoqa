@@ -1548,6 +1548,18 @@ def run_experiment(model_name, args, num_proof_steps, test_num_proof_steps, log_
 			shuffle(available_concept_names)
 		else:
 			raise Exception("Only the fictional ontology type is suppoted when `disjoint_concept_names` is set.")
+	available_concept_names = [
+					["wumpus", "yumpus", "zumpus", "dumpus", "rompus", "numpus", "tumpus", "vumpus", "impus", "jompus"],
+					["timple", "yimple", "starple", "shumple", "zhomple", "remple", "fomple", "fimple", "worple", "sorple"],
+					["tergit", "gergit", "stergit", "kergit", "shergit", "pergit", "bongit", "orgit", "welgit", "jelgit"],
+					["felper", "dolper", "sarper", "irper", "chorper", "parper", "arper", "lemper", "hilper", "gomper"],
+					["dalpist", "umpist", "rifpist", "storpist", "shalpist", "yerpist", "ilpist", "boompist", "scrompist", "phorpist"],
+					["prilpant", "gwompant", "urpant", "grimpant", "shilpant", "zhorpant", "rorpant", "dropant", "lerpant", "quimpant"],
+					["zilpor", "frompor", "stirpor", "porpor", "kurpor", "shampor", "werpor", "zhimpor", "yempor", "jempor"],
+					["folpee", "drompee", "delpee", "lompee", "wolpee", "gorpee", "shimpee", "rimpee", "twimpee", "serpee"],
+					["daumpin", "thorpin", "borpin", "rofpin", "bempin", "dulpin", "harpin", "lirpin", "yompin", "stopin"]
+				]
+	available_concept_names = [name for sublist in available_concept_names for name in sublist]
 	available_train_rules = list(AVAILABLE_DEDUCTION_RULES)
 	if args.OOD:
 		available_train_rules.remove(args.deduction_rule)
@@ -1638,8 +1650,11 @@ def run_experiment(model_name, args, num_proof_steps, test_num_proof_steps, log_
 					curr_proof_width = args.proof_width
 					curr_deduction_rule = args.deduction_rule
 				while True:
-					next_concept_names = (None if available_concept_names == None else available_concept_names[i])
-					(question_i, query_i, _, chain_of_thought_i, answer_i, proof_i) = generate_question(curr_proof_steps, next_concept_names, args.ordering, args.ontology, args.distractors, curr_deduction_rule, args.proofs_only, args.DFS, curr_proof_width, args.no_adjectives, args.generate_non_atomic_steps, args.rule_types)
+					available_concept_names_len = len(available_concept_names)
+					multishot_concept_names = sample(available_concept_names, available_concept_names_len//2)
+					base_concept_names = [x for x in available_concept_names if x not in multishot_concept_names]
+					# next_concept_names = (None if available_concept_names == None else available_concept_names[i])
+					(question_i, query_i, _, chain_of_thought_i, answer_i, proof_i) = generate_question(curr_proof_steps, multishot_concept_names, args.ordering, args.ontology, args.distractors, curr_deduction_rule, args.proofs_only, args.DFS, curr_proof_width, args.no_adjectives, args.generate_non_atomic_steps, args.rule_types)
 					if question_i != None:
 						break
 				questions.append(question_i)
@@ -1651,8 +1666,8 @@ def run_experiment(model_name, args, num_proof_steps, test_num_proof_steps, log_
 			if not (args.deduction_rule == "Composed" and args.OOD):
 				if t == 0:
 					while True:
-						next_concept_names = (None if available_concept_names == None else available_concept_names[args.few_shot_examples])
-						test_question = generate_question(test_num_proof_steps, next_concept_names, args.test_ordering, args.ontology, args.test_distractors, args.deduction_rule, args.proofs_only, "none", args.proof_width + args.test_width_diff, args.no_adjectives, False, args.rule_types)
+						# next_concept_names = (None if available_concept_names == None else available_concept_names[args.few_shot_examples])
+						test_question = generate_question(test_num_proof_steps, base_concept_names, args.test_ordering, args.ontology, args.test_distractors, args.deduction_rule, args.proofs_only, "none", args.proof_width + args.test_width_diff, args.no_adjectives, False, args.rule_types)
 						(question, query, question_lfs, chain_of_thought, answer, proof) = test_question
 						if question != None:
 							break
@@ -1753,22 +1768,22 @@ class DebugArgs:
 		self.resume = False
 		self.model_name = "json"
 		self.model_size = ""
-		self.ordering = "random"
-		self.test_ordering = "random"
+		self.ordering = "preorder"
+		self.test_ordering = "preorder"
 		self.num_trials = 1000
-		self.few_shot_examples = 0
+		self.few_shot_examples = 1
 		self.ontology = "fictional"
 		self.opt_server = None
-		self.distractors = "relevant"
-		self.test_distractors = "relevant"
+		self.distractors = "none"
+		self.test_distractors = "none"
 		self.no_adjectives = False
 		self.proofs_only = False
 		self.DFS = "none"
 		self.disjoint_concept_names = False
 		self.OOD = False
 		self.api_key = None
-		self.min_hops = 20
-		self.max_hops = 20
+		self.min_hops = 1
+		self.max_hops = 8
 		self.test_hops_diff = 0
 		self.hops_skip = 1
 		self.proof_width = 2
